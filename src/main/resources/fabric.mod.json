@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "bond007",
+  "version": "${version}",
+  "name": "DeatCounter Fabric",
+  "description": "Death Counter Mod - Progressive death penalty system",
+  "authors": ["Alpha"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/bond007/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+      "org.Alpha.bond007.Bond007"
+    ]
+  },
+  "mixins": [
+    "bond007.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": ">=1.20"
+  }
+}
