@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -19,10 +20,13 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +104,10 @@ public class Bond007 implements DedicatedServerModInitializer {
         if (entity instanceof ServerPlayerEntity player) {
             UUID uuid = player.getUuid();
 
+            if (shouldIgnoreDeathDueToTotem(player, damageSource)) {
+                return true;
+            }
+
             // Save player's spawn data before death (Yarn 1.21.8 API)
             ServerPlayerEntity.Respawn respawn = player.getRespawn();
             BlockPos spawnPos = respawn != null ? respawn.pos() : null;
@@ -135,6 +143,21 @@ public class Bond007 implements DedicatedServerModInitializer {
             return true;
         }
         return true;
+    }
+
+    private boolean shouldIgnoreDeathDueToTotem(ServerPlayerEntity player, DamageSource damageSource) {
+        if (damageSource.isOf(DamageTypes.OUT_OF_WORLD)) {
+            return false;
+        }
+
+        for (Hand hand : Hand.values()) {
+            ItemStack stack = player.getStackInHand(hand);
+            if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void onPlayerRespawn(ServerPlayerEntity oldPlayer, ServerPlayerEntity newPlayer, boolean alive) {
