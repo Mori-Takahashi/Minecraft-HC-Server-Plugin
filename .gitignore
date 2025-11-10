@@ -1,0 +1,33 @@
+.gradle/
+/build/
+/run/
+
+# IDE / tooling
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Logs / temp
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Generated artifacts
+/out/
+/bin/
+/dist/
+
+# Fabric / Loom cache
+remappedSrc/
+remappedMods/
+*.mcassets
