@@ -1,0 +1,58 @@
+name: Build & Release (Fabric)
+
+on:
+  release:
+    types: [published]   # wenn die Release final veröffentlicht ist
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write     # nötig, um Assets an die Release anzuhängen
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      # Falls du die Version aus dem Release-Tag übernehmen willst (z.B. v1.2.3),
+      # kannst du sie hier als -PmodVersion durchreichen und im build.gradle verwenden.
+      - name: Build (Loom remapJar)
+        run: |
+          ./gradlew --version
+          ./gradlew clean build --no-daemon
+
+      # Das auslieferbare Loom-Artefakt liegt unter build/libs/,
+      # typischerweise ohne -dev/-sources. Wir filtern entsprechend.
+      - name: Find distributable JAR(s)
+        id: findjars
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=()
+          for f in build/libs/*.jar; do
+            case "$f" in
+              *-dev.jar|*-sources.jar) ;;  # diese NICHT anhängen
+              *) files+=("$f") ;;
+            esac
+          done
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "Kein distributables JAR gefunden." >&2
+            exit 1
+          fi
+          printf '%s\n' "${files[@]}"
+          printf 'files=%s\n' "$(IFS=,; echo "${files[*]}")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload JAR(s) to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.findjars.outputs.files }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
